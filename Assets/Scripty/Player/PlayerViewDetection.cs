@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Cinemachine;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using UnityEngine.InputSystem;
@@ -137,7 +137,7 @@ public class PlayerViewDetection : MonoBehaviour
         {
             CinemachineTargetGroup.Target newTarget = new CinemachineTargetGroup.Target
             {
-                target = targetTransform, weight = targetWeight, radius = 1f
+                Object = targetTransform, Weight = targetWeight, Radius = 1f
             };
             cinemachineTargetGroup.m_Targets[1] = newTarget;
         }
