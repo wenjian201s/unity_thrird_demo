@@ -7,7 +7,7 @@
             "id": "4c13e72f-8fdf-4993-80d1-31f07825ee9d",
             "actions": [
                 {
-                    "name": "Move",
+                    "name": "PlayerMovement",
                     "type": "Value",
                     "id": "4783e438-388b-413d-8dbc-a70772cb396e",
                     "expectedControlType": "Vector2",
@@ -39,7 +39,7 @@
                     "id": "d2a9dcf0-ae6f-4b18-b2a3-7d078303e08c",
                     "expectedControlType": "",
                     "processors": "",
-                    "interactions": "Hold(duration=1),Tap",
+                    "interactions": "Hold,Tap",
                     "initialStateCheck": false
                 },
                 {
@@ -132,7 +132,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "Move",
+                    "action": "PlayerMovement",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -143,7 +143,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Move",
+                    "action": "PlayerMovement",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
@@ -154,7 +154,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Move",
+                    "action": "PlayerMovement",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -165,7 +165,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Move",
+                    "action": "PlayerMovement",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -176,7 +176,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Move",
+                    "action": "PlayerMovement",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
@@ -187,39 +187,17 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Move",
+                    "action": "PlayerMovement",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
                 {
                     "name": "",
-                    "id": "c1f7a91b-d0fd-4a62-997e-7fb9b69bf235",
-                    "path": "<Gamepad>/rightStick",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Gamepad",
-                    "action": "Look",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "8c8e490b-c610-4785-884f-f04217b23ca4",
-                    "path": "<Pointer>/delta",
+                    "path": "<Mouse>/delta",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Keyboard&Mouse;Touch",
-                    "action": "Look",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "3e5f5442-8668-4b27-a940-df99bad7e831",
-                    "path": "<Joystick>/{Hatswitch}",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Joystick",
+                    "groups": ";Keyboard&Mouse",
                     "action": "Look",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -252,7 +230,7 @@
                     "path": "<Keyboard>/space",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Keyboard&Mouse",
+                    "groups": "",
                     "action": "Jump",
                     "isComposite": false,
                     "isPartOfComposite": false

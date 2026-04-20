@@ -20,6 +20,12 @@ public class ThirdPersonController : MonoBehaviour
     private CharacterController characterController;   // Unity 角色控制器
     private PlayerSoundController playerSoundController; // 玩家音效控制器
     private CombatControllerBase combatController;     // 战斗控制器基类
+    private PlayerInput playerInput;                   // 新输入系统入口组件
+    private InputAction moveAction;                    // 移动输入动作
+    private InputAction runSlideAction;                // 奔跑 / 翻滚输入动作
+    private InputAction crouchAction;                  // 下蹲输入动作
+    private InputAction jumpAction;                    // 跳跃输入动作
+    private bool inputActionsBound;                    // 防止重复订阅输入事件
      
     #endregion
      
@@ -186,6 +192,8 @@ public class ThirdPersonController : MonoBehaviour
         characterController = this.GetComponent<CharacterController>(); // 获取 CharacterController
         playerSoundController = this.GetComponent<PlayerSoundController>(); // 获取音效控制器
         combatController = this.GetComponent<CombatControllerBase>();      // 获取战斗控制器
+        playerInput = this.GetComponent<PlayerInput>();                    // 获取 PlayerInput
+        BindInputActions();                                                // 运行时主动绑定输入事件
          
         // 缓存 Animator 参数哈希，提高访问效率
         postureHash = Animator.StringToHash("Posture");
@@ -202,6 +210,19 @@ public class ThirdPersonController : MonoBehaviour
         // 用于判断是否应该进入 Landing 状态
         landdingMinVelocity = -Mathf.Sqrt(-2 * gravity * fallHeight); 
         landdingMinVelocity -= 1f;
+    }
+
+    private void OnEnable()
+    {
+        if (playerInput != null)
+        {
+            BindInputActions();
+        }
+    }
+
+    private void OnDisable()
+    {
+        UnbindInputActions();
     }
 
     void Update()
@@ -395,6 +416,7 @@ public class ThirdPersonController : MonoBehaviour
                     break;
 
                 case LocomotionState.Run:
+                    
                     animator.SetFloat(moveSpeedHash, playerMovement.magnitude * runSpeed, 0.1f, Time.deltaTime);
                     break;
             }
@@ -471,15 +493,15 @@ public class ThirdPersonController : MonoBehaviour
         // 只有站立 / 下蹲状态下才能起跳
         // 并且要求当前按下跳跃键
         // 同时垂直速度不能太大，避免重复触发起跳
-        if ((playerPosture == PlayerPosture.Stand || playerPosture == PlayerPosture.Crouch) 
-            && isJumpPressed 
-            && verticalVelocity < 2f)
+        if ((playerPosture == PlayerPosture.Stand || playerPosture == PlayerPosture.Crouch) && isJumpPressed && verticalVelocity < 2f)
         {
+           
             // 播放跳跃音效
             playerSoundController.PlayJumpEffortSound();
              
             // 由最大高度反推起跳初速度
             verticalVelocity = Mathf.Sqrt(-2 * gravity * maxHeight);
+            
              
             // 立即设置 Animator 中的垂直速度，提升动画切换流畅度
             animator.SetFloat(verticalSpeedHash, verticalVelocity);
@@ -681,6 +703,115 @@ public class ThirdPersonController : MonoBehaviour
     #region 玩家输入相关  
 
     /// <summary>
+    /// 主动订阅 PlayerInput 动作，避免依赖 Inspector 里的 UnityEvent 手动绑定。
+    /// </summary>
+    private void BindInputActions()
+    {
+        if (inputActionsBound)
+            return;
+
+        if (playerInput == null)
+            playerInput = GetComponent<PlayerInput>();
+
+        if (playerInput == null || playerInput.actions == null)
+        {
+            Debug.LogWarning($"{nameof(ThirdPersonController)} 找不到 PlayerInput 或 Input Actions，移动输入不会生效。", this);
+            return;
+        }
+
+        InputActionMap playerMap = playerInput.actions.FindActionMap(playerInput.defaultActionMap, false);
+        if (playerMap == null)
+            playerMap = playerInput.actions.FindActionMap("Player", false);
+
+        if (playerMap == null)
+        {
+            Debug.LogWarning($"{nameof(ThirdPersonController)} 找不到 Player 动作表，移动输入不会生效。", this);
+            return;
+        }
+
+        moveAction = playerMap.FindAction("PlayerMovement", false);
+        runSlideAction = playerMap.FindAction("Run/Slide", false);
+        crouchAction = playerMap.FindAction("Crouch", false);
+        jumpAction = playerMap.FindAction("Jump", false);
+
+        if (moveAction != null)
+        {
+            moveAction.performed += GetMoveInput;
+            moveAction.canceled += GetMoveInput;
+        }
+        else
+        {
+            Debug.LogWarning($"{nameof(ThirdPersonController)} 找不到 Move 动作，WASD 不会生效。", this);
+        }
+
+        if (runSlideAction != null)
+        {
+            runSlideAction.performed += GetRunInput;
+            runSlideAction.canceled += GetRunInput;
+        }
+        else
+        {
+            Debug.LogWarning($"{nameof(ThirdPersonController)} 找不到 Run/Slide 动作，奔跑和翻滚不会生效。", this);
+        }
+
+        if (crouchAction != null)
+        {
+            crouchAction.started += GetCrouchInput;
+        }
+        else
+        {
+            Debug.LogWarning($"{nameof(ThirdPersonController)} 找不到 Crouch 动作，下蹲不会生效。", this);
+        }
+
+        if (jumpAction != null)
+        {
+            jumpAction.performed += GetJumpInput;
+            jumpAction.canceled += GetJumpInput;
+        }
+        else
+        {
+            Debug.LogWarning($"{nameof(ThirdPersonController)} 找不到 Jump 动作，跳跃不会生效。", this);
+        }
+
+        playerMap.Enable();
+        inputActionsBound = true;
+    }
+
+    /// <summary>
+    /// 物体禁用或销毁时解除订阅，避免重复回调。
+    /// </summary>
+    private void UnbindInputActions()
+    {
+        if (!inputActionsBound)
+            return;
+
+        if (moveAction != null)
+        {
+            moveAction.performed -= GetMoveInput;
+            moveAction.canceled -= GetMoveInput;
+        }
+
+        if (runSlideAction != null)
+        {
+            runSlideAction.performed -= GetRunInput;
+            runSlideAction.canceled -= GetRunInput;
+        }
+
+        if (crouchAction != null)
+        {
+            crouchAction.started -= GetCrouchInput;
+        }
+
+        if (jumpAction != null)
+        {
+            jumpAction.performed -= GetJumpInput;
+            jumpAction.canceled -= GetJumpInput;
+        }
+
+        inputActionsBound = false;
+    }
+
+    /// <summary>
     /// 接收移动输入
     /// </summary>
     public void GetMoveInput(InputAction.CallbackContext ctx)
@@ -734,7 +865,9 @@ public class ThirdPersonController : MonoBehaviour
     /// </summary>
     public void GetJumpInput(InputAction.CallbackContext ctx)
     {
+        
         isJumpPressed = ctx.ReadValueAsButton();
+       
     }
      
     #endregion
