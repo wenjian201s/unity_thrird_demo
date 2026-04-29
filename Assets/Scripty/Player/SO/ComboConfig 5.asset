@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5095af12963c4604949bc126ab310011, type: 3}
+  m_Name: ComboConfig 5
+  m_EditorClassIdentifier: 
+  comboName: GSCombo05
+  coolDownTime: 2.5
+  comboInteractionConfigs:
+  - startTime: 0.3
+    endTime: 0.4
+    hitName: hit_front
+    hitAirName: 
+    weaponType: 2
+    attackForce: 0
+    healthDamage: 196
+    enduranceDamage: 65
+  fxConfigs:
+  - startTime: 0.36
+    FXPrefab: {fileID: 7257810882012927379, guid: b60c9eeeaae8e074191b6f7cb4075acc, type: 3}
+    FXName: FX/FX_hit03
+    position: {x: 0, y: 0.7, z: 0}
+    rotation: {x: 0, y: 200, z: 0}
+    scale: {x: -1, y: 1, z: 1}
+  clipConfigs:
+  - startTime: 0.31
+    audioClip: {fileID: 8300000, guid: d415f9f342ed8f54192920213e1a3264, type: 3}
+    volume: 1
+    duration: 0
+  attackFeedbackConfigs:
+  - velocity: {x: 0.1, y: 0, z: 0}
+    audioClip: {fileID: 8300000, guid: 39c2fdc7d2da98740beba33de5ccaeff, type: 3}
+    audioStartTime: 0
+    animatorSpeed: 0.05
+    stopFrameTime: 0.3
+  selfMoveOffsetConfigsConfigs: []
+  targetMoveOffsetConfigsConfigs: []

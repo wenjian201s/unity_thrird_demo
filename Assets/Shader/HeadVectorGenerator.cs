@@ -35,8 +35,11 @@ public class HeadVectorGenerator : MonoBehaviour
                 {
                     if (mat.shader.name == "URP/Character/S_StarRail")
                     {
-                        mat.SetVector(HeadForwardID, HeadForwardTransform.position - HeadBoneTransform.position);
-                        mat.SetVector(HeadRightID, HeadRightTransform.position - HeadBoneTransform.position);
+                        //mat.SetVector(HeadForwardID, HeadForwardTransform.position - HeadBoneTransform.position);
+                       // mat.SetVector(HeadRightID, HeadRightTransform.position - HeadBoneTransform.position);
+                        
+                        mat.SetVector(HeadForwardID, HeadBoneTransform.transform.forward);
+                        mat.SetVector(HeadRightID, HeadBoneTransform.transform.right);
                     }
                 }
             }
