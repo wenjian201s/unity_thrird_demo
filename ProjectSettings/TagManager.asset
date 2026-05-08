@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Ground
+  - PerfectDodgeCollider
   layers:
   - Default
   - TransparentFX

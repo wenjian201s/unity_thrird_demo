@@ -231,6 +231,10 @@ public class ThirdPersonController : MonoBehaviour
         SwitchPlayerStates();    // 切换玩家状态机
          
         CaculateGravity();       // 先计算重力
+        if (ShouldBlockJumpDuringAttack())
+        {
+            isJumpPressed = false; // 攻击动画期间消费跳跃输入，避免一边攻击一边起跳
+        }
         Jump();                  // 再处理跳跃
          
         CaculateInputDirection(); // 计算输入方向
@@ -493,7 +497,7 @@ public class ThirdPersonController : MonoBehaviour
         // 只有站立 / 下蹲状态下才能起跳
         // 并且要求当前按下跳跃键
         // 同时垂直速度不能太大，避免重复触发起跳
-        if ((playerPosture == PlayerPosture.Stand || playerPosture == PlayerPosture.Crouch) && isJumpPressed && verticalVelocity < 2f)
+        if ((playerPosture == PlayerPosture.Stand || playerPosture == PlayerPosture.Crouch) && isJumpPressed && verticalVelocity < 2f && !ShouldBlockJumpDuringAttack())
         {
            
             // 播放跳跃音效
@@ -509,6 +513,11 @@ public class ThirdPersonController : MonoBehaviour
             // 随机选择左右脚起跳动画
             footTween = Random.value > 0.5 ? 1f : -1f;
         }
+    }
+
+    private bool ShouldBlockJumpDuringAttack()
+    {
+        return combatController != null && combatController.IsAttackAnimationActive;
     }
 
     /// <summary>
@@ -865,8 +874,14 @@ public class ThirdPersonController : MonoBehaviour
     /// </summary>
     public void GetJumpInput(InputAction.CallbackContext ctx)
     {
-        
-        isJumpPressed = ctx.ReadValueAsButton();
+        bool pressed = ctx.ReadValueAsButton();
+        if (pressed && ShouldBlockJumpDuringAttack())
+        {
+            isJumpPressed = false; // 攻击动画中按下 Space 时只吞掉输入，不缓存到攻击结束后补跳
+            return;
+        }
+
+        isJumpPressed = pressed;
        
     }
      
