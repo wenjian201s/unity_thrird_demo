@@ -51,21 +51,21 @@ public class FXManager : SingletonPatternBase<FXManager>  //特效管理器
         particleSystem.Play();
         Debug.Log("播放了特效" + FXName); // 输出调试日志，表示该受击特效已播放
     }
-    // // 播放敌人特效
-    // // 这是 PlayOneFX 的重载版本，参数改为 EnemyFXConfig
-    // // 用于播放敌人专用特效
-    // public void PlayOneFX(EnemyFXConfig fxConfig, Vector3 position, Vector3 rotation, Vector3 scale)
-    // {
-    //     GameObject FX = CachePoolManager.Instance.GetObject(fxConfig.FXName);  // 从对象池中根据敌人特效名称获取特效对象
-    //     if (!FX)
-    //     {
-    //         Debug.LogError("FX Manager is NULL");
-    //         return;
-    //     }
-    //     FX.transform.position = position;
-    //     FX.transform.eulerAngles = rotation;
-    //     FX.transform.localScale = scale;
-    //     ParticleSystem particleSystem = FX.GetComponent<ParticleSystem>();
-    //     particleSystem.Play(); //播放特效
-    // }
+     // 播放敌人特效
+     // 这是 PlayOneFX 的重载版本，参数改为 EnemyFXConfig
+     // 用于播放敌人专用特效
+    public void PlayOneFX(EnemyFXConfig fxConfig, Vector3 position, Vector3 rotation, Vector3 scale)
+    {
+        GameObject FX = CachePoolManager.Instance.GetObject(fxConfig.FXName);  // 从对象池中根据敌人特效名称获取特效对象
+        if (!FX)
+        {
+            Debug.LogError("FX Manager is NULL");
+            return;
+        }
+        FX.transform.position = position;
+        FX.transform.eulerAngles = rotation;
+        FX.transform.localScale = scale;
+        ParticleSystem particleSystem = FX.GetComponent<ParticleSystem>();
+        particleSystem.Play(); //播放特效
+    }
 }

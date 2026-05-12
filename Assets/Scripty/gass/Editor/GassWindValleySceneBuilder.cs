@@ -39,7 +39,8 @@ public static class GassWindValleySceneBuilder
         Material terrainMaterial = CreateTerrainMaterial(groundTexture);
         Terrain terrain = CreateTerrain(terrainMaterial);
         GassWindField windField = CreateWindField();
-        CreateGrassRenderer(terrain, grassMesh, grassMaterial, windTexture, windField);
+        GassWindTextureField windTextureField = CreateWindTextureField(windField);
+        CreateGrassRenderer(terrain, grassMesh, grassMaterial, windTexture, windField, windTextureField);
         ConfigureEnvironment();
         ConfigureLightingAndCamera(terrain);
 
@@ -168,12 +169,17 @@ public static class GassWindValleySceneBuilder
         material.SetColor("_ShadowColor", new Color(0.46f, 0.35f, 0.16f, 1f));
         material.SetColor("_RimColor", new Color(1.0f, 0.98f, 0.86f, 1f));
         material.SetTexture("_WindTex", windTexture);
+        material.SetFloat("_WindFieldStrength", 1.15f);
         material.SetFloat("_WindStrength", 0.58f);
         material.SetFloat("_WindSpeed", 1.65f);
         material.SetFloat("_WindScale", 0.035f);
         material.SetFloat("_GustStrength", 0.42f);
         material.SetFloat("_GustScale", 2.35f);
         material.SetFloat("_BladeLean", 0.34f);
+        material.SetFloat("_RigidityOffset", 0.08f);
+        material.SetFloat("_RigidityFalloff", 1.75f);
+        material.SetFloat("_WindNormalInfluence", 0.55f);
+        material.SetFloat("_ClumpLean", 0.24f);
         material.SetFloat("_NprSteps", 3f);
         EditorUtility.SetDirty(material);
         return material;
@@ -216,6 +222,8 @@ public static class GassWindValleySceneBuilder
         List<Vector3> vertices = new List<Vector3>();
         List<Vector3> normals = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
+        List<Vector2> pivots = new List<Vector2>();
+        List<Vector2> bladeData = new List<Vector2>();
         List<Color> colors = new List<Color>();
         List<int> indices = new List<int>();
 
@@ -230,13 +238,16 @@ public static class GassWindValleySceneBuilder
             float height = Mathf.Lerp(0.86f, 1.24f, Frac(Mathf.Sin(blade * 19.17f) * 43.37f));
             float width = Mathf.Lerp(0.16f, 0.28f, Frac(Mathf.Sin(blade * 27.03f) * 91.11f));
             float sideLean = Mathf.Lerp(-0.18f, 0.18f, Frac(Mathf.Sin(blade * 8.31f) * 17.19f));
+            float bladeRandom = Frac(Mathf.Sin((blade + 1) * 41.217f) * 713.11f);
+            Vector3 rootOffset = forward * Mathf.Lerp(0.0f, 0.26f, bladeRandom) + right * Mathf.Lerp(-0.08f, 0.08f, Frac(bladeRandom * 5.37f));
+            Vector2 pivot = new Vector2(rootOffset.x, rootOffset.z);
 
             int startIndex = vertices.Count;
             for (int segment = 0; segment <= segments; segment++)
             {
                 float t = (float)segment / segments;
                 float taper = Mathf.Lerp(1f, 0.08f, t);
-                Vector3 center = forward * (t * t * 0.42f) + right * (sideLean * t * t);
+                Vector3 center = rootOffset + forward * (t * t * 0.42f) + right * (sideLean * t * t);
                 center.y = t * height;
                 Vector3 left = center - right * width * taper;
                 Vector3 rightPos = center + right * width * taper;
@@ -246,6 +257,10 @@ public static class GassWindValleySceneBuilder
                 normals.Add((forward + Vector3.up * 0.25f).normalized);
                 uvs.Add(new Vector2(0f, t));
                 uvs.Add(new Vector2(1f, t));
+                pivots.Add(pivot);
+                pivots.Add(pivot);
+                bladeData.Add(new Vector2(bladeRandom, t));
+                bladeData.Add(new Vector2(bladeRandom, t));
                 colors.Add(new Color(1f, 1f, 1f, Mathf.Lerp(0.72f, 1f, t)));
                 colors.Add(new Color(1f, 1f, 1f, Mathf.Lerp(0.72f, 1f, t)));
             }
@@ -265,6 +280,8 @@ public static class GassWindValleySceneBuilder
         mesh.SetVertices(vertices);
         mesh.SetNormals(normals);
         mesh.SetUVs(0, uvs);
+        mesh.SetUVs(1, pivots);
+        mesh.SetUVs(2, bladeData);
         mesh.SetColors(colors);
         mesh.SetTriangles(indices, 0);
         mesh.RecalculateBounds();
@@ -390,7 +407,36 @@ public static class GassWindValleySceneBuilder
         return windField;
     }
 
-    static void CreateGrassRenderer(Terrain terrain, Mesh mesh, Material grassMaterial, Texture2D windTexture, GassWindField windField)
+    static GassWindTextureField CreateWindTextureField(GassWindField windField)
+    {
+        GameObject windObject = GameObject.Find(WindFieldName);
+        if (windObject == null)
+        {
+            windObject = new GameObject(WindFieldName);
+        }
+
+        GassWindTextureField textureField = windObject.GetComponent<GassWindTextureField>();
+        if (textureField == null)
+        {
+            textureField = windObject.AddComponent<GassWindTextureField>();
+        }
+
+        textureField.sourceWind = windField;
+        textureField.resolution = 96;
+        textureField.tileWidth = 96f;
+        textureField.fieldStrength = 1.15f;
+        textureField.updatesPerSecond = 20f;
+        textureField.particleCount = 14;
+        textureField.particleRadius = 18f;
+        textureField.turbulence = 0.18f;
+        textureField.globalPush = 0.38f;
+        textureField.seed = 20260512;
+        textureField.ApplyGlobals();
+        EditorUtility.SetDirty(windObject);
+        return textureField;
+    }
+
+    static void CreateGrassRenderer(Terrain terrain, Mesh mesh, Material grassMaterial, Texture2D windTexture, GassWindField windField, GassWindTextureField windTextureField)
     {
         GameObject grassObject = GameObject.Find(GrassRendererName);
         if (grassObject == null)
@@ -410,6 +456,7 @@ public static class GassWindValleySceneBuilder
         renderer.grassMaterial = grassMaterial;
         renderer.windTexture = windTexture;
         renderer.windField = windField;
+        renderer.windTextureField = windTextureField;
         renderer.targetBladeClusters = 32000;
         renderer.chunksPerAxis = 10;
         renderer.terrainPadding = 2f;
@@ -417,7 +464,7 @@ public static class GassWindValleySceneBuilder
         renderer.widthRange = new Vector2(0.88f, 1.45f);
         renderer.valleyHeightBoost = -0.12f;
         renderer.valleyDensityDrop = 0.18f;
-        renderer.drawInSceneView = true;
+        renderer.drawInSceneView = false;
         renderer.cullByFrustum = true;
         renderer.maxRenderDistance = 132f;
         renderer.farLodStartDistance = 72f;

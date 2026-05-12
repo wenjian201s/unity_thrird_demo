@@ -92,62 +92,62 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
         currentComboList = comboListDict[_weaponType]; // 将当前连招表切换为该武器类型对应的连招表
     }
 
-    // /// <summary>
-    // /// 玩家受击逻辑
-    // /// </summary>
-    // public void PlayerOnHit(EnemyAttackDetectionConfig attackConfig, Transform attackerTransform) // 玩家被击中时调用的方法
-    // {
-    //     if(!canBeHit) // 如果当前不能被击中
-    //         return; // 直接返回，避免重复受击
-    //     canBeHit = false; // 标记当前暂时不能再被击中
-    //     
-    //     //停止攻击检测（防止攻击被打断时攻击检测一直开启）
-    //     attackCheckSystem.EndAttacking(); // 结束当前攻击检测，防止攻击中断后检测残留
-    //     
-    //     //禁用玩家移动和攻击输入
-    //     movementInputAction.Disable(); // 禁用移动输入
-    //     attackAction.Disable(); // 禁用攻击输入
-    //     
-    //     int damage = attackConfig.damage + Random.Range(-10, 10); // 根据攻击配置计算最终伤害，并附加一个随机浮动值
-    //     //TODO: 扣除生命值等逻辑
-    //     Debug.Log("玩家受到了" + damage + "点伤害!"); // 在控制台打印玩家受到的伤害数值
-    //
-    //     //播放切换装备动画、大剑的攻击动画时不播放受击动画（大剑攻击有硬直）
-    //     if (canPlayHitAnim && !animator.GetCurrentAnimatorStateInfo(0).IsTag("GSAttack") && // 如果允许播放受击动画，且当前不是大剑攻击状态
-    //         !animator.GetCurrentAnimatorStateInfo(0).IsTag("Equip")) // 并且当前不是切换装备状态
-    //     {
-    //         Vector3 dir = (attackerTransform.position - this.transform.position).normalized; // 计算攻击者相对玩家的方向向量并归一化
-    //     
-    //         // 计算与前方和右侧的夹角
-    //         float angleForward = Vector3.Angle(dir, transform.forward); // 计算攻击方向与玩家前方的夹角
-    //         float angleRight = Vector3.Angle(dir, transform.right); // 计算攻击方向与玩家右侧的夹角
-    //
-    //         // 判断方位
-    //         if (angleForward <= 45f) // 如果攻击来自玩家前方 90 度范围内
-    //         {
-    //             animator.Play("Hit_Front_" + weaponType.ToString()); // 播放对应武器的前方受击动画
-    //         }
-    //         else if (angleForward >= 135f) // 如果攻击来自玩家后方 90 度范围内
-    //         {
-    //             animator.Play("Hit_Back_" + weaponType.ToString()); // 播放对应武器的后方受击动画
-    //         }
-    //         else if (angleRight <= 45f) // 如果攻击来自玩家右侧 90 度范围内
-    //         {
-    //             animator.Play("Hit_Right_" + weaponType.ToString()); // 播放对应武器的右侧受击动画
-    //         }
-    //         else if (angleRight >= 135f) // 如果攻击来自玩家左侧 90 度范围内
-    //         {
-    //             animator.Play("Hit_Left_" + weaponType.ToString()); // 播放对应武器的左侧受击动画
-    //         }
-    //     }
-    //     
-    //     //生成受击特效
-    //     string hitFXName = hitFXList[0].TryGetHitFXName(); // 获取第一个受击特效配置对应的特效名称
-    //     FXManager.Instance.PlayOneHitFX(hitFXName, hitTransform.position, hitFXScale); // 在受击位置播放受击特效
-    //     
-    //     //无敌时间计时
-    //     StartCoroutine(IE_HitCoolDown(hitCoolDown)); // 启动受击冷却协程，处理短暂无敌和输入恢复
-    // }
+    /// <summary>
+    /// 玩家受击逻辑
+    /// </summary>
+    public void PlayerOnHit(EnemyAttackDetectionConfig attackConfig, Transform attackerTransform) // 玩家被击中时调用的方法
+    {
+        if(!canBeHit) // 如果当前不能被击中
+            return; // 直接返回，避免重复受击
+        canBeHit = false; // 标记当前暂时不能再被击中
+        
+        //停止攻击检测（防止攻击被打断时攻击检测一直开启）
+        attackCheckSystem.EndAttacking(); // 结束当前攻击检测，防止攻击中断后检测残留
+        
+        //禁用玩家移动和攻击输入
+        movementInputAction.Disable(); // 禁用移动输入
+        attackAction.Disable(); // 禁用攻击输入
+        
+        int damage = attackConfig.damage + Random.Range(-10, 10); // 根据攻击配置计算最终伤害，并附加一个随机浮动值
+        //TODO: 扣除生命值等逻辑
+        Debug.Log("玩家受到了" + damage + "点伤害!"); // 在控制台打印玩家受到的伤害数值
+    
+        //播放切换装备动画、大剑的攻击动画时不播放受击动画（大剑攻击有硬直）
+        if (canPlayHitAnim && !animator.GetCurrentAnimatorStateInfo(0).IsTag("GSAttack") && // 如果允许播放受击动画，且当前不是大剑攻击状态
+            !animator.GetCurrentAnimatorStateInfo(0).IsTag("Equip")) // 并且当前不是切换装备状态
+        {
+            Vector3 dir = (attackerTransform.position - this.transform.position).normalized; // 计算攻击者相对玩家的方向向量并归一化
+        
+            // 计算与前方和右侧的夹角
+            float angleForward = Vector3.Angle(dir, transform.forward); // 计算攻击方向与玩家前方的夹角
+            float angleRight = Vector3.Angle(dir, transform.right); // 计算攻击方向与玩家右侧的夹角
+    
+            // 判断方位
+            if (angleForward <= 45f) // 如果攻击来自玩家前方 90 度范围内
+            {
+                animator.Play("Hit_Front_" + weaponType.ToString()); // 播放对应武器的前方受击动画
+            }
+            else if (angleForward >= 135f) // 如果攻击来自玩家后方 90 度范围内
+            {
+                animator.Play("Hit_Back_" + weaponType.ToString()); // 播放对应武器的后方受击动画
+            }
+            else if (angleRight <= 45f) // 如果攻击来自玩家右侧 90 度范围内
+            {
+                animator.Play("Hit_Right_" + weaponType.ToString()); // 播放对应武器的右侧受击动画
+            }
+            else if (angleRight >= 135f) // 如果攻击来自玩家左侧 90 度范围内
+            {
+                animator.Play("Hit_Left_" + weaponType.ToString()); // 播放对应武器的左侧受击动画
+            }
+        }
+        
+        //生成受击特效
+        string hitFXName = hitFXList[0].TryGetHitFXName(); // 获取第一个受击特效配置对应的特效名称
+        FXManager.Instance.PlayOneHitFX(hitFXName, hitTransform.position, hitFXScale); // 在受击位置播放受击特效
+        
+        //无敌时间计时
+        StartCoroutine(IE_HitCoolDown(hitCoolDown)); // 启动受击冷却协程，处理短暂无敌和输入恢复
+    }
     
     private IEnumerator IE_HitCoolDown(float coolDownTime) // 受击冷却协程，控制短时间内不可再次受击
     {

@@ -22,6 +22,7 @@ public sealed class GassNprGrassRenderer : MonoBehaviour
     public Material grassMaterial;
     public Texture2D windTexture;
     public GassWindField windField;
+    public GassWindTextureField windTextureField;
 
     [Header("Distribution")]
     [Min(128)] public int targetBladeClusters = 32000;
@@ -36,7 +37,7 @@ public sealed class GassNprGrassRenderer : MonoBehaviour
     [Range(0f, 0.8f)] public float valleyDensityDrop = 0.18f;
 
     [Header("Performance")]
-    public bool drawInSceneView = true;
+    public bool drawInSceneView;
     public bool cullByFrustum = true;
     [Min(0f)] public float maxRenderDistance = 132f;
     [Min(0f)] public float farLodStartDistance = 72f;
@@ -205,6 +206,11 @@ public sealed class GassNprGrassRenderer : MonoBehaviour
         if (windField != null)
         {
             windField.ApplyTo(propertyBlock);
+        }
+
+        if (windTextureField != null)
+        {
+            windTextureField.ApplyTo(propertyBlock);
         }
 
         grassMaterial.enableInstancing = true;
