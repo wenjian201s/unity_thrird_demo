@@ -119,18 +119,19 @@ public class AttackCheckGizmos : MonoBehaviour// 攻击检测脚本，继承 Mon
                         //若检测到了敌人
                         if (length > 0)
                         {
-                            foreach (RaycastHit enemy in enemiesRaycastHits) // 遍历命中结果数组
+                            for (int hitIndex = 0; hitIndex < length; hitIndex++) // 只遍历本次有效命中
                             {
+                                RaycastHit enemy = enemiesRaycastHits[hitIndex];
                                 if (enemy.transform)// 如果当前命中结果有效
                                 {    // 获取敌人的战斗控制器
-                                    //EnemyCombatController enemyHit = enemy.transform.gameObject.GetComponent<EnemyCombatController>();
-                                    // if (enemyHit)// 如果目标身上有敌人战斗控制器
-                                    // {    // 调用敌人的受击函数
-                                    //     enemyHit.OnHit(comboInteractionConfig, attackFeedbackConfig, this.transform); //调用受击函数   
-                                    //     SetAnimatorSpeed(attackFeedbackConfig.animatorSpeed); //对玩家进行顿帧 // 设置自己动画速度，实现顿帧效果
-                                    //     // 在 stopFrameTime 秒后恢复动画速度
-                                    //     Invoke(nameof(ResetAnimatorSpeed), attackFeedbackConfig.stopFrameTime); //结束顿帧
-                                    // }
+                                    EnemyCombatController enemyHit = enemy.collider.GetComponentInParent<EnemyCombatController>();
+                                    if (enemyHit)// 如果目标身上有敌人战斗控制器
+                                    {    // 调用敌人的受击函数
+                                        enemyHit.OnHit(comboInteractionConfig, attackFeedbackConfig, this.transform); //调用受击函数   
+                                        SetAnimatorSpeed(attackFeedbackConfig.animatorSpeed); //对玩家进行顿帧 // 设置自己动画速度，实现顿帧效果
+                                        // 在 stopFrameTime 秒后恢复动画速度
+                                        Invoke(nameof(ResetAnimatorSpeed), attackFeedbackConfig.stopFrameTime); //结束顿帧
+                                    }
                                 }
                             }
                         }

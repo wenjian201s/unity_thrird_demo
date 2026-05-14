@@ -107,7 +107,7 @@ public class EnemyAttackAnimation : MonoBehaviour
     {
         // 如果技能配置列表为空，直接返回
         // 防止后面查找配置时报错
-        if (abilityConfigs == null)
+        if (abilityConfigs == null || abilityConfigs.Count == 0)
             return;
 
         // 判断当前动画状态是否是攻击类动画
@@ -142,6 +142,11 @@ public class EnemyAttackAnimation : MonoBehaviour
         
         // 根据技能 ID 找到对应的技能配置
         currentAbilityConfig = GetAbilityConfigByID(currentAbilityID);
+        if (currentAbilityConfig == null)
+        {
+            Debug.LogWarning($"EnemyAttackAnimation: 未找到 abilityID={currentAbilityID} 的技能配置，跳过动画事件 {count}");
+            return;
+        }
 
         // 把当前技能配置同步给 EnemyCombatController
         //
@@ -180,7 +185,9 @@ public class EnemyAttackAnimation : MonoBehaviour
     {
         // 如果当前攻击段索引超过检测配置数组长度，直接返回
         // 防止数组越界
-        if (count >= currentAbilityConfig.detectionConfigs.Length)
+        if (currentAbilityConfig == null ||
+            currentAbilityConfig.detectionConfigs == null ||
+            count >= currentAbilityConfig.detectionConfigs.Length)
             return;
 
         // 开启攻击检测
@@ -235,7 +242,9 @@ public class EnemyAttackAnimation : MonoBehaviour
     private void PlayFXEvent(int count)
     {
         // 如果索引超过特效配置数组长度，直接返回
-        if (count >= currentAbilityConfig.fxConfigs.Length)
+        if (currentAbilityConfig == null ||
+            currentAbilityConfig.fxConfigs == null ||
+            count >= currentAbilityConfig.fxConfigs.Length)
             return;
 
         // 开启协程
@@ -246,6 +255,9 @@ public class EnemyAttackAnimation : MonoBehaviour
     // 延迟播放特效协程
     IEnumerator IE_FXCount(EnemyFXConfig fxConfig)
     {
+        if (fxConfig == null || string.IsNullOrEmpty(fxConfig.FXName))
+            yield break;
+
         // 特效开始时间
         // 表示动画事件触发后，再等多少秒播放特效
         float timer = fxConfig.startTime;
@@ -260,7 +272,7 @@ public class EnemyAttackAnimation : MonoBehaviour
         // 如果特效名称不为空，则播放特效
         //
         // FXName 通常用于对象池或特效管理器查找特效
-        if (fxConfig.FXName != null)
+        if (!string.IsNullOrEmpty(fxConfig.FXName))
         {
             // 根据敌人的朝向计算特效生成位置
             //
@@ -303,7 +315,9 @@ public class EnemyAttackAnimation : MonoBehaviour
     private void PlayClipEvent(int count)
     {
         // 如果索引超过音效配置数组长度，直接返回
-        if (count >= currentAbilityConfig.clipConfigs.Length)
+        if (currentAbilityConfig == null ||
+            currentAbilityConfig.clipConfigs == null ||
+            count >= currentAbilityConfig.clipConfigs.Length)
             return;
 
         // 开启协程

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57fae1becc6a45d1b825f49bfc88571e, type: 3}
+  m_Name: EnemyOnHitFXConfig
+  m_EditorClassIdentifier: 
+  hitFXInfoList:
+  - hitFX: {fileID: 872462168564033203, guid: 37af80b30e01bdc4d8041d51f4c381e7, type: 3}
+    hitFXName: FX/FX_hit01

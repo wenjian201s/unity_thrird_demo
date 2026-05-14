@@ -20,6 +20,7 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
     private CharacterController controller; // 角色控制器组件引用，用于角色移动碰撞
     private ThirdPersonController thirdPersonController; // 第三人称控制器组件引用
     private AttackCheckGizmos attackCheck; // 攻击检测 Gizmos 组件引用
+    private SwapWeapon swapWeapon;
     
     private InputAction movementInputAction; // 玩家移动输入动作引用
     private InputAction attackAction; // 玩家攻击输入动作引用
@@ -46,6 +47,8 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
     [SerializeField] private string perfectDodgeAudioClipPath; // 完美闪避音效资源路径
     
     private int rollHash; // 翻滚动画参数的哈希值，优化 Animator 参数访问
+    [SerializeField] private float rollInputBufferTime = 0.25f;
+    private float rollInputBufferTimer;
 
     void Awake() // Unity 生命周期：对象初始化时调用
     {
@@ -63,6 +66,7 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
         controller = GetComponent<CharacterController>(); // 获取当前对象上的 CharacterController 组件
         thirdPersonController = GetComponent<ThirdPersonController>(); // 获取当前对象上的 ThirdPersonController 组件
         attackCheck = GetComponent<AttackCheckGizmos>(); // 获取当前对象上的 AttackCheckGizmos 组件
+        swapWeapon = GetComponent<SwapWeapon>();
         
         movementInputAction = GetComponent<PlayerInput>().actions["PlayerMovement"]; // 从 PlayerInput 中获取“移动”输入动作
         attackAction = GetComponent<PlayerInput>().actions["Attack"]; // 从 PlayerInput 中获取“攻击”输入动作
@@ -78,6 +82,7 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
     void Update() // Unity 生命周期：每帧调用一次
     {
         base.Update(); // 调用父类的 Update 方法，执行基类每帧逻辑
+        TickRollInputBuffer();
     }
 
     void FixedUpdate() // Unity 生命周期：固定时间间隔调用，常用于物理或稳定计时
@@ -125,19 +130,19 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
             // 判断方位
             if (angleForward <= 45f) // 如果攻击来自玩家前方 90 度范围内
             {
-                animator.Play("Hit_Front_" + weaponType.ToString()); // 播放对应武器的前方受击动画
+                animator.Play("Lucy_Hit_F_Root", 0, 0f); // 播放前方受击动画
             }
             else if (angleForward >= 135f) // 如果攻击来自玩家后方 90 度范围内
             {
-                animator.Play("Hit_Back_" + weaponType.ToString()); // 播放对应武器的后方受击动画
+                animator.Play("Lucy_Hit_B_Root", 0, 0f); // 播放后方受击动画
             }
             else if (angleRight <= 45f) // 如果攻击来自玩家右侧 90 度范围内
             {
-                animator.Play("Hit_Right_" + weaponType.ToString()); // 播放对应武器的右侧受击动画
+                animator.Play("Lucy_Hit_R_Root", 0, 0f); // 播放右侧受击动画
             }
             else if (angleRight >= 135f) // 如果攻击来自玩家左侧 90 度范围内
             {
-                animator.Play("Hit_Left_" + weaponType.ToString()); // 播放对应武器的左侧受击动画
+                animator.Play("Lucy_Hit_L_Root", 0, 0f); // 播放左侧受击动画
             }
         }
         
@@ -226,23 +231,102 @@ public class PlayerCombatController : CombatControllerBase // 定义玩家战斗
 
     #region 玩家输入相关 // 玩家输入处理区域
 
-    public void GetAttackInput(InputAction.CallbackContext ctx) // 接收玩家攻击输入
+    public void GetAttackInput(InputAction.CallbackContext ctx)
     {
-        if (ctx.started && weaponType != E_WeaponType.Empty) // 如果输入刚开始触发，并且当前装备了武器
-        {
-            ExecuteCombo();  // 执行连招逻辑
-        }
+        if (!ctx.started || !CanStartAttack())
+            return;
+
+        ExecuteCombo();
     }
+
+    private bool CanStartAttack()
+    {
+        if (weaponType == E_WeaponType.Empty || currentComboList == null)
+            return false;
+
+        if (thirdPersonController != null && thirdPersonController.armState != ThirdPersonController.ArmState.Equip)
+            return false;
+
+        if (swapWeapon != null && !swapWeapon.IsWeaponInHand(weaponType))
+            return false;
+
+        if (animator == null)
+            return true;
+
+        AnimatorStateInfo currentState = animator.GetCurrentAnimatorStateInfo(0);
+        if (currentState.IsTag("Equip") || currentState.IsTag("EquipMotion"))
+            return false;
+
+        if (animator.IsInTransition(0))
+        {
+            AnimatorStateInfo nextState = animator.GetNextAnimatorStateInfo(0);
+            if (nextState.IsTag("Equip") || nextState.IsTag("EquipMotion"))
+                return false;
+        }
+
+        return true;
+    }
+
     
     //获取玩家闪避输入
     public void GetSlideInput(InputAction.CallbackContext ctx) // 接收玩家闪避输入
     {
-        if (ctx.interaction is TapInteraction && canExecuteCombo) // 如果当前输入是点击交互，并且当前允许执行动作
-        {
-            animator.SetTrigger(rollHash); // 触发翻滚动画参数，执行闪避动作
-        }
+        if (weaponType == E_WeaponType.Empty)
+            return;
+
+        if (!ctx.started && !ctx.performed)
+            return;
+
+        if (!(ctx.interaction is TapInteraction) && !ctx.started)
+            return;
+
+        QueueRollInput();
     }
-    
+
+    private void QueueRollInput()
+    {
+        rollInputBufferTimer = rollInputBufferTime;
+        TryConsumeRollInput();
+    }
+
+    private void TickRollInputBuffer()
+    {
+        if (rollInputBufferTimer <= 0f)
+            return;
+
+        rollInputBufferTimer -= Time.deltaTime;
+        TryConsumeRollInput();
+    }
+
+    private void TryConsumeRollInput()
+    {
+        if (rollInputBufferTimer <= 0f || !CanStartRoll())
+            return;
+
+        rollInputBufferTimer = 0f;
+        attackCheck?.EndAttacking();
+        animator.ResetTrigger(rollHash);
+        animator.SetTrigger(rollHash);
+    }
+
+    private bool CanStartRoll()
+    {
+        if (!thirdPersonController)
+            return true;
+
+        if (thirdPersonController.playerPosture != ThirdPersonController.PlayerPosture.Stand &&
+            thirdPersonController.playerPosture != ThirdPersonController.PlayerPosture.Crouch)
+            return false;
+
+        AnimatorStateInfo currentState = animator.GetCurrentAnimatorStateInfo(0);
+        if (currentState.IsTag("Roll"))
+            return false;
+
+        if (animator.IsInTransition(0) && animator.GetNextAnimatorStateInfo(0).IsTag("Roll"))
+            return false;
+
+        return true;
+    }
     #endregion // 结束玩家输入相关区域
     
 } // 类定义结束

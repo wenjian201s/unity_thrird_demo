@@ -40,10 +40,10 @@ public class SwapWeapon : MonoBehaviour // 定义武器切换类，继承 MonoBe
             equipHash = Animator.StringToHash("WeaponType"); // 将 Animator 参数名 WeaponType 转换成哈希值，避免频繁使用字符串
     }
     
-    void Update() // Unity 生命周期函数，每帧调用一次
+    void Update()
     {
-        //设置动画状态
-        SetAnimator(); // 每帧更新动画参数和当前 IK 权重
+        SetAnimator();
+        RepairWeaponVisualState();
     }
 
     private void SetAnimator() // 设置 Animator 参数和 IK 权重的方法
@@ -54,6 +54,68 @@ public class SwapWeapon : MonoBehaviour // 定义武器切换类，继承 MonoBe
         currentRightHandIKConstraint.weight = animator.GetFloat("Right Hand Weight"); // 从 Animator 中读取右手权重曲线值，并赋给当前右手 IK
         currentLeftHandIKConstraint.weight = animator.GetFloat("Left Hand Weight"); // 从 Animator 中读取左手权重曲线值，并赋给当前左手 IK
     }
+
+    private bool IsWeaponIndexValid(int index)
+    {
+        return index > 0 &&
+               weaponOnBack != null &&
+               weaponInHand != null &&
+               index < weaponOnBack.Length &&
+               index < weaponInHand.Length &&
+               weaponOnBack[index] != null &&
+               weaponInHand[index] != null;
+    }
+
+    private void SetWeaponModelState(int index, bool inHand)
+    {
+        if (!IsWeaponIndexValid(index))
+            return;
+
+        weaponOnBack[index].SetActive(!inHand);
+        weaponInHand[index].SetActive(inHand);
+    }
+
+    public bool IsWeaponInHand(E_WeaponType requestedWeaponType)
+    {
+        int index = (int)requestedWeaponType;
+
+        if (requestedWeaponType == E_WeaponType.Empty || !IsWeaponIndexValid(index))
+            return false;
+
+        return weaponInHand[index].activeInHierarchy;
+    }
+
+    public bool HasEquippedWeaponInHand()
+    {
+        return weaponType != E_WeaponType.Empty && IsWeaponInHand(weaponType);
+    }
+
+    private bool IsEquipAnimationActive()
+    {
+        AnimatorStateInfo currentState = animator.GetCurrentAnimatorStateInfo(0);
+
+        if (currentState.IsTag("Equip") || currentState.IsTag("EquipMotion"))
+            return true;
+
+        if (!animator.IsInTransition(0))
+            return false;
+
+        AnimatorStateInfo nextState = animator.GetNextAnimatorStateInfo(0);
+        return nextState.IsTag("Equip") || nextState.IsTag("EquipMotion");
+    }
+
+    private void RepairWeaponVisualState()
+    {
+        if (weaponType == E_WeaponType.Empty ||
+            thirdPersonController == null ||
+            thirdPersonController.armState != ThirdPersonController.ArmState.Equip ||
+            IsEquipAnimationActive() ||
+            HasEquippedWeaponInHand())
+            return;
+
+        SetWeaponModelState((int)weaponType, true);
+    }
+
     
     #region 动画片段调用函数 // 动画事件调用函数区域
     
@@ -61,12 +123,13 @@ public class SwapWeapon : MonoBehaviour // 定义武器切换类，继承 MonoBe
     /// 切换背部武器和手部武器的显示
     /// </summary>
     /// <param name="weaponType">表示武器的位置是在背上0还是手上1\2\3</param>
-    public void PutGrabWeapon(int weaponType) // 动画事件调用的方法，用于在拔刀或收刀动画中切换武器模型显示
+    public void PutGrabWeapon(int weaponType)
     {
-        //isOnBack为true时是装备武器，为false时是收回武器
-        bool isOnBack = weaponOnBack[weaponType].activeSelf; // 判断指定武器当前是否显示在背上
-        weaponOnBack[weaponType].SetActive(!isOnBack); // 将背部武器显示状态取反，背上显示则隐藏，背上隐藏则显示
-        weaponInHand[weaponType].SetActive(isOnBack); // 根据原来的背部显示状态，控制手上武器显示状态
+        if (!IsWeaponIndexValid(weaponType))
+            return;
+
+        bool shouldBeInHand = this.weaponType != E_WeaponType.Empty && (int)this.weaponType == weaponType;
+        SetWeaponModelState(weaponType, shouldBeInHand);
     }
     
     #endregion // 动画事件调用函数区域结束

@@ -147,8 +147,8 @@ Material:
     - _BackFaceTintColor: {r: 0.5849056, g: 0.20140618, b: 0.20140618, a: 1}
     - _EmissionTintColor: {r: 1, g: 1, b: 1, a: 1}
     - _FrontFaceTintColor: {r: 0.990566, g: 0.990566, b: 0.990566, a: 1}
-    - _HeadForward: {r: 0.037431516, g: 0, b: 0.99929917, a: 0}
-    - _HeadRight: {r: 0.99929917, g: 0, b: -0.037431516, a: 0}
+    - _HeadForward: {r: 0.037426777, g: -0.016424103, b: 0.9991644, a: 0}
+    - _HeadRight: {r: 0.99929917, g: -0.00000032532262, b: -0.03743183, a: 0}
     - _RimLightTintColor: {r: 1, g: 1, b: 1, a: 1}
     - _StockingsDarkColor: {r: 0, g: 0, b: 0, a: 1}
     - _StockingsLightColor: {r: 1.8, g: 1.48299, b: 0.856821, a: 1}
